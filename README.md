@@ -1,5 +1,5 @@
 # quoter README
-Quoter adds the ability to quote, unquote, and delimit text.
+Quoter adds the ability to quote, unquote, and delimit text. It is based on https://github.com/alanmbarr/vscode-quotify
 
 ![Example](images/example.gif)
 

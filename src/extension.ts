@@ -84,11 +84,12 @@ function splitByNewLine(text: string): Array<string> {
  * quote array of strings
  * @param strings array of strings to convert
  */
-function arrayToString (strings: Array<string>) : string {
+function arrayToString(strings: Array<string>) : string {
     return strings
     .map((curr, idx, arr) => {
         return arr.length - 1 == idx ? `${curr}` : `${curr}\n`;
     })
+    .reverse()
     .reduce((curr,prev) : string => {
         return prev += `${curr}`;
     },"");
@@ -104,7 +105,7 @@ function arrayToQuotedString (strings: Array<string>, quoteChar: string) : Array
     })
     .map((str)=>{
        return `${quoteChar}${str.trim()}${quoteChar}`;
-    }).reverse();
+    });
 }
 
 /**
@@ -119,15 +120,14 @@ function arrayToUnquotedString (strings: Array<string>) : Array<string> {
     //    let pattern = isSingleQouted ? /^'(.*)'$/ : /^"(.*)"$/;
        let text = str.trim();
        return text.substring(1, text.length - 2);
-    }).reverse();
+    });
 }
 
 function arrayTodelimitedStrings(strings: Array<string>, delimitChar: string) : Array<string> {
     return strings.filter((el)=>{
         return el.trim() !== ""
     })
-    .map((el, idx, arr) => {return arr.length - 1 === idx ? `${el}` : `${el}${delimitChar}`})
-    .reverse();
+    .map((el, idx, arr) => {return arr.length - 1 === idx ? `${el}` : `${el}${delimitChar}`});
 }
 
 function getTextRange(editor: vscode.TextEditor) : vscode.Range {

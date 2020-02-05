@@ -86,8 +86,8 @@ function splitByNewLine(text: string): Array<string> {
  */
 function arrayToString (strings: Array<string>) : string {
     return strings
-    .map((curr) => {
-        return `${curr}\n`
+    .map((curr, idx, arr) => {
+        return arr.length - 1 == idx ? `${curr}` : `${curr}\n`;
     })
     .reduce((curr,prev) : string => {
         return prev += `${curr}`;

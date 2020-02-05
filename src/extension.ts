@@ -1,244 +1,164 @@
 'use strict';
 import * as vscode from 'vscode';
-import { inputQuotes } from './inputQuotes';
+import { chooseQuoteSymbol, chooseDelimitSymbol } from './helpers';
 
 export function activate(context: vscode.ExtensionContext) {
 
-    let quote = vscode.commands.registerCommand('extension.quotifyQuoteStrings', () => quoteStrings());
-    let unquote = vscode.commands.registerCommand('extension.quotifyUnquoteStrings', () => unquoteStrings());
-    let newline = vscode.commands.registerCommand('extension.quotifyNewlineStrings', () => newLineStrings());
-    let commaNewLine = vscode.commands.registerCommand('extension.quotifyCommaNewlineStrings', () => commaNewLineStrings());
-    // let arrayString = vscode.commands.registerCommand('extension.buildArrayString', () => buildArrayString());
-    // let sqlSetString = vscode.commands.registerCommand('extension.buildSqlSetString', () => buildSqlSetString());
+    let quote = vscode.commands.registerCommand('extension.quoterQuoteStrings', () => quoteStrings());
+    let unquote = vscode.commands.registerCommand('extension.quoterUnquoteStrings', () => unquoteStrings());
+    let delimit = vscode.commands.registerCommand('extension.quoterDelimitStrings', () => delimitStrings());
 
     context.subscriptions.push(quote);
     context.subscriptions.push(unquote);
-    context.subscriptions.push(newline);
-    context.subscriptions.push(commaNewLine);
-    // context.subscriptions.push(arrayString);
-    // context.subscriptions.push(sqlSetString);
+    context.subscriptions.push(delimit);
 }
 
-export function deactivate() {
-}
+export function deactivate() {}
 
-// function buildArrayString() {
-//     let editor = vscode.window.activeTextEditor;
-//     let range;
-//     if (!editor.selection.isEmpty) {
-//         range = editor.selection;
-//     } else {
-//         vscode.window.showErrorMessage("No text selected");
-//         return;
-//     }
-
-//     let text = editor.document.getText(range);
-//     let result = JSON.stringify(splitByCommaOrNewLine(text));
-//     editor.edit((builder) => {
-//         builder.replace(range, result);
-//     });
-//     editor.revealRange(range);
-// }
-
-// function buildSqlSetString() {
-//     let editor = vscode.window.activeTextEditor;
-//     let range;
-//     if (!editor.selection.isEmpty) {
-//         range = editor.selection;
-//     } else {
-//         vscode.window.showErrorMessage("No text selected");
-//         return;
-//     }
-
-//     let text = editor.document.getText(range);
-//     let result = arrayToSqlSetString(splitByCommaOrNewLine(text));
-//     editor.edit((builder) => {
-//         builder.replace(range, result);
-//     });
-//     editor.revealRange(range);
-// }
-
-async function quoteStrings () {
-    let editor = vscode.window.activeTextEditor;
+async function quoteStrings() {
+    let editor = getActiveEditor();
     if (editor == null) {
-        vscode.window.showErrorMessage("No text editor open");
         return;
     }
 
-    let range;
-    if (!editor.selection.isEmpty) {
-        range = editor.selection;
-    } else {
-        vscode.window.showErrorMessage("No text selected");
+    // Get Text
+    let range = getTextRange(editor);
+    if (range == null){
         return;
     }
-
+    let text = editor.document.getText(range);
     // Get User's choice of quote
-    var input = await inputQuotes();
-
-    let text = editor.document.getText(range);
-    let result = arrayToQuotedString(splitByCommaOrNewLine(text), input);
-    editor.edit((builder) =>{
-        builder.replace(range,result);
-    });
-    editor.revealRange(range);
+    var quoteChar = await chooseQuoteSymbol();
+    // Process
+    let quotedResult = arrayToQuotedString(splitByNewLine(text), quoteChar);
+    writeResults(quotedResult, range, editor);
 }
 
-async function unquoteStrings () {
-    let editor = vscode.window.activeTextEditor;
+async function unquoteStrings() {
+    let editor = getActiveEditor();
     if (editor == null) {
-        vscode.window.showErrorMessage("No text editor open");
         return;
     }
 
-    let range;
-    if (!editor.selection.isEmpty) {
-        range = editor.selection;
-    } else {
-        vscode.window.showErrorMessage("No text selected");
+    // Get Text
+    let range = getTextRange(editor);
+    if (range == null){
         return;
     }
-
-    // Get User's choice of quote
-    var input = await inputQuotes();
-
     let text = editor.document.getText(range);
-    let result = arrayToUnquotedString(splitByCommaOrNewLine(text), input);
-    editor.edit((builder) =>{
-        builder.replace(range,result);
-    });
-    editor.revealRange(range);
+    // Process
+    let unquotedResult = arrayToUnquotedString(splitByNewLine(text));
+    writeResults(unquotedResult, range, editor);
 }
 
-function commaNewLineStrings () {
-    let editor = vscode.window.activeTextEditor;
+async function delimitStrings() {
+    let editor = getActiveEditor();
     if (editor == null) {
-        vscode.window.showErrorMessage("No text editor open");
         return;
     }
 
-    let range;
-    if (!editor.selection.isEmpty) {
-        range = editor.selection;
-    } else {
-        vscode.window.showErrorMessage("No text selected");
+    // Get Text
+    let range = getTextRange(editor);
+    if (range == null){
         return;
     }
-
     let text = editor.document.getText(range);
-    let result = commaNewLineify(splitByCommaOrNewLine(text));
-    editor.edit((builder) =>{
-        builder.replace(range,result);
-    });
-    editor.revealRange(range);
-}
 
-function newLineStrings () {
-    let editor = vscode.window.activeTextEditor;
-    if (editor == null) {
-        vscode.window.showErrorMessage("No text editor open");
-        return;
-    }
-
-    let range;
-    if (!editor.selection.isEmpty) {
-        range = editor.selection;
-    } else {
-        vscode.window.showErrorMessage("No text selected");
-        return;
-    }
-
-    let text = editor.document.getText(range);
-    let result = newLineify(splitByCommaOrNewLine(text));
-    editor.edit((builder) =>{
-        builder.replace(range,result);
-    });
-    editor.revealRange(range);
+    // Get User's choice of delimit character
+    let delimitChar = await chooseDelimitSymbol();
+    // Process
+    let delimitedResult = arrayTodelimitedStrings(splitByNewLine(text), delimitChar);
+    writeResults(delimitedResult, range, editor);
 }
 
 /**
- * Split by commas (with leading/trailing spaces or tabs)
- * or by newlines (with optional carriage return)
- * 
+ * Split by newlines (with optional carriage return)
+ *
  * @param text the string to split
  */
-export function splitByCommaOrNewLine (text: string): Array<string> {
-    if(text.includes(',')){
-        return text.split(/[ \t]*,[ \t]*/)
-    }else {
-        return text.split(/\r?\n/);
-    }
+function splitByNewLine(text: string): Array<string> {
+    return text.split(/\r?\n/);
 }
 
 /**
- * Ghetto escape and single quote array of strings
+ * quote array of strings
  * @param strings array of strings to convert
  */
-// export function arrayToSqlSetString(strings: Array<string>): string {
-//     var strings = arrayToUnquotedString(strings).split(",");
-//     var result = strings.filter((el) => {
-//         return el.trim() !== ""
-//     })
-//     .map((str, idx, arr) => {
-//         let last = arr.length - 1;
-//         return idx === last ? `'${str.trim().replace('\'', '\'\'')}'` : `'${str.trim().replace('\'', '\'\'')}',`;
-//     }).reverse()
-//     .reduce((curr, prev): string => {
-//         return prev += `${curr}`;
-//     }, "");
-
-//     return '(' + result + ')';
-// }
-
-export function arrayToQuotedString (strings: Array<string>, quoteChar: string) : string {
-    return strings.filter((el)=>{
-        return el.trim() !== ""
+function arrayToString (strings: Array<string>) : string {
+    return strings
+    .map((curr) => {
+        return `${curr}\n`
     })
-    .map((str,idx, arr)=>{
-       let last = arr.length - 1;
-       return idx === last ? `${quoteChar}${str.trim()}${quoteChar}` : `${quoteChar}${str.trim()}${quoteChar},`;
-    }).reverse()
     .reduce((curr,prev) : string => {
         return prev += `${curr}`;
     },"");
 }
 
-export function arrayToUnquotedString (strings: Array<string>, quoteChar: string) : string {
+/**
+ * quote array of strings
+ * @param strings array of strings to convert
+ */
+function arrayToQuotedString (strings: Array<string>, quoteChar: string) : Array<string> {
     return strings.filter((el)=>{
         return el.trim() !== ""
     })
-    .map((str,idx, arr)=>{
-       let last = arr.length - 1;
-       let pattern = quoteChar === '\'' ? /^'(.*)'$/ : /^"(.*)"$/;
-       let replace = `${str.trim().replace(pattern, '$1')}`; 
-       return idx === last ? replace : replace + ',';
-    }).reverse()
-    .reduce((curr,prev) : string => {
-        return prev += `${curr}`;
-    },"");
+    .map((str)=>{
+       return `${quoteChar}${str.trim()}${quoteChar}`;
+    }).reverse();
 }
 
-export function commaNewLineify (strings: Array<string>) : string {
+/**
+ * unquote array of strings
+ * @param strings array of strings to convert
+ */
+function arrayToUnquotedString (strings: Array<string>) : Array<string> {
     return strings.filter((el)=>{
         return el.trim() !== ""
     })
-    .map((str,idx, arr)=>{
-       let last = arr.length - 1;
-       let replace = `${str.trim().replace(/^"(.*)"$/, '$1')}`; 
-       return idx === last ? replace+'\n' : replace + ',\n';
-    }).reverse()
-    .reduce((curr,prev) : string => {
-        return prev += `${curr}`;
-    },"");
+    .map((str)=>{
+    //    let pattern = isSingleQouted ? /^'(.*)'$/ : /^"(.*)"$/;
+       let text = str.trim();
+       return text.substring(1, text.length - 2);
+    }).reverse();
 }
 
-export function newLineify (strings: Array<string>) : string {
+function arrayTodelimitedStrings(strings: Array<string>, delimitChar: string) : Array<string> {
     return strings.filter((el)=>{
         return el.trim() !== ""
     })
-    .map((el) => {return `${el}\n`})
-    .reverse()
-    .reduce((curr,prev) : string => {
-        return prev += `${curr}`;
-    },"");
+    .map((el, idx, arr) => {return arr.length - 1 === idx ? `${el}` : `${el}${delimitChar}`})
+    .reverse();
+}
+
+function getTextRange(editor: vscode.TextEditor) : vscode.Range {
+    let range : vscode.Range = null;
+
+    if (!editor.document.getText()) {
+        vscode.window.showErrorMessage("No text found");
+    } else if (!editor.selection.isEmpty) {
+        range = new vscode.Range(editor.selection.start, editor.selection.end);
+    } else {
+        var firstLine = editor.document.lineAt(0);
+        var lastLine = editor.document.lineAt(editor.document.lineCount - 1);
+        range = new vscode.Range(firstLine.range.start, lastLine.range.end);
+    }
+
+    return range;
+}
+
+function getActiveEditor() : vscode.TextEditor {
+    let editor = vscode.window.activeTextEditor;
+    if (editor == null) {
+        vscode.window.showErrorMessage("No text editor open");
+    }
+
+    return editor;
+}
+
+function writeResults(quotedResult: string[], range: vscode.Range, editor: vscode.TextEditor) {
+    let result = arrayToString(quotedResult);
+    editor.edit((builder) =>{
+        builder.replace(range,result);
+    });
+    editor.revealRange(range);
 }

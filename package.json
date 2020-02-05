@@ -1,9 +1,9 @@
 {
-    "name": "quotify",
-    "displayName": "quotify",
-    "description": "Convert a delimited list of strings to double quoted delimited strings",
-    "version": "0.0.4",
-    "publisher": "alanmbarr",
+    "name": "quoter",
+    "displayName": "Quoter",
+    "description": "Delimit or Quote/Unquote text",
+    "version": "0.0.1",
+    "publisher": "shoaibshakeel381",
     "icon": "images/quotation-marks.png",
     "engines": {
         "vscode": "^1.16.0"
@@ -12,29 +12,24 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:extension.quotifyQuoteStrings",
-        "onCommand:extension.quotifyUnquoteStrings",
-        "onCommand:extension.quotifyNewlineStrings",
-        "onCommand:extension.quotifyCommaNewlineStrings"
+        "onCommand:extension.quoterQuoteStrings",
+        "onCommand:extension.quoterUnquoteStrings",
+        "onCommand:extension.quoterDelimitStrings"
     ],
     "main": "./out/src/extension",
     "contributes": {
         "commands": [
             {
-                "command": "extension.quotifyQuoteStrings",
-                "title": "Quotify: Quote Strings"
+                "command": "extension.quoterQuoteStrings",
+                "title": "Quoter: Quote Strings"
             },
             {
-                "command": "extension.quotifyUnquoteStrings",
-                "title": "Quotify: Unquote Strings"
+                "command": "extension.quoterUnquoteStrings",
+                "title": "Quoter: Unquote Strings"
             },
             {
-                "command": "extension.quotifyNewlineStrings",
-                "title": "Quotify: Newline Delimit Strings"
-            },
-            {
-                "command": "extension.quotifyCommaNewlineStrings",
-                "title": "Quotify: Comma Newline Delimit Strings"
+                "command": "extension.quoterDelimitStrings",
+                "title": "Quoter: Delimit Strings"
             }
         ]
     },
@@ -47,18 +42,18 @@
     },
     "devDependencies": {
         "@types/mocha": "^2.2.42",
-        "@types/node": "^7.0.43",
-        "mocha": "^3.5.0",
+        "@types/node": "^10.3.0",
+        "mocha": "^7.0.1",
         "typescript": "^2.5.2",
-        "vscode": "^1.1.18"
+        "vscode": "^1.1.36"
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/alanmbarr/vscode-quotify.git"
+        "url": "https://github.com/shoaibshakeel381/vscode-quoter.git"
     },
-    "author": "Alan Barr",
+    "author": "Shoaib Shakeel",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/bengreenier/vscode-quotify/issues"
+        "url": "https://github.com/shoaibshakeel381/vscode-quoter/issues"
     }
 }
